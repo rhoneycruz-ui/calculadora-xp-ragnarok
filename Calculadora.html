@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔ Ragnarok X — XP Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #07090f;
+    --bg2:       #0d1120;
+    --bg3:       #131929;
+    --card:      #161d30;
+    --card2:     #1c2540;
+    --border:    #252f50;
+    --gold:      #e8b84b;
+    --gold2:     #f5d07a;
+    --blue:      #4a8de8;
+    --green:     #38d68a;
+    --red:       #e84a5f;
+    --text:      #dde2f5;
+    --muted:     #6a76a8;
+    --radius:    10px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 48px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 0%, #1a2550 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 80%, #0e1a40 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 720px;
+  }
+
+  /* ── Header ── */
+  .header { text-align: center; margin-bottom: 36px; }
+  .header-sword { font-size: 36px; margin-bottom: 8px; filter: drop-shadow(0 0 12px #e8b84b88); }
+  .header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-shadow: 0 0 30px #e8b84b44;
+  }
+  .header p {
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+  .header-line {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 14px auto 0;
+  }
+
+  /* ── Cards de Ponto ── */
+  .points-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .points-grid { grid-template-columns: 1fr; } }
+
+  .point-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 18px;
+    transition: border-color 0.2s;
+  }
+  .point-card.locked { border-color: var(--green); box-shadow: 0 0 16px #38d68a18; }
+
+  .point-label {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .point-label span.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .p1-color { color: var(--gold); }
+  .p2-color { color: var(--blue); }
+  .dot-gold { background: var(--gold); }
+  .dot-blue { background: var(--blue); }
+
+  .field-group { margin-bottom: 12px; }
+  .field-group:last-child { margin-bottom: 0; }
+  .field-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .field-row { display: flex; gap: 6px; align-items: center; }
+  .field-row input, .field-row select {
+    flex: 1;
+    min-width: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field-row select { font-family: 'Rajdhani', sans-serif; font-weight: 600; cursor: pointer; }
+  .field-row input:focus, .field-row select:focus { border-color: var(--gold); }
+  .field-row input::placeholder { color: var(--muted); opacity: 0.5; }
+
+  /* Duplo EXP Base / Job */
+  .exp-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .exp-input { display: flex; flex-direction: column; gap: 5px; }
+  .exp-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .exp-tag.color-gold { color: var(--gold2); }
+  .exp-tag.color-blue { color: var(--blue); }
+
+  .btn-now {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--gold);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 0 10px;
+    height: 36px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-now:hover { background: var(--card2); border-color: var(--gold); }
+
+  .locked-badge { display: none; font-size: 11px; color: var(--green); letter-spacing: 1px; margin-top: 10px; }
+  .locked-badge.show { display: block; }
+
+  /* ── Botões de ação ── */
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 400px) { .actions { grid-template-columns: 1fr; } }
+
+  .btn-main {
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-main:active { transform: scale(0.97); }
+  .btn-main:hover { opacity: 0.88; }
+
+  .btn-register { background: var(--gold); color: #0d0e14; }
+  .btn-calc     { background: var(--green); color: #061a10; }
+  .btn-reset    { background: var(--card2); color: var(--red); border: 1px solid var(--border); }
+
+  /* ── Resultados ── */
+  .results-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .results-header {
+    background: var(--card2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .results-time-row {
+    padding: 14px 18px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .results-time-row .metric-label { margin-bottom: 6px; }
+  .results-time-row .metric-value { font-size: clamp(16px, 3.5vw, 20px); }
+
+  .results-split { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 560px) { .results-split { grid-template-columns: 1fr; } }
+
+  .result-group { border-right: 1px solid var(--border); }
+  .result-group:last-child { border-right: none; }
+  @media (max-width: 560px) {
+    .result-group { border-right: none; border-bottom: 1px solid var(--border); }
+    .result-group:last-child { border-bottom: none; }
+  }
+  .result-group-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 10px 0 4px;
+    text-transform: uppercase;
+  }
+  .metrics-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .metric { padding: 14px 8px 18px; text-align: center; }
+  .metric-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .metric-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(12px, 2.6vw, 16px);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .metric-value.empty { color: var(--border); }
+  .color-text  { color: var(--text); }
+  .color-gold  { color: var(--gold2); }
+  .color-green { color: var(--green); }
+  .color-blue  { color: var(--blue); }
+
+  /* ── Level Up Predictor ── */
+  .levelup-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .levelup-header {
+    background: #1a1830;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #a080e0;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .levelup-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+
+  .predictor-block {
+    background: #12102a;
+    border: 1px solid #2e2560;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .predictor-title {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .predictor-title::before {
+    content: '⬤';
+    font-size: 8px;
+  }
+  .predictor-title.t-gold { color: var(--gold2); }
+  .predictor-title.t-blue { color: var(--blue); }
+
+  .predictor-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  @media (max-width: 420px) { .predictor-row { grid-template-columns: 1fr; } }
+
+  .btn-predict {
+    background: #6a3fc8;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+    padding: 12px 18px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-predict:hover { opacity: 0.85; }
+  .btn-predict:active { transform: scale(0.97); }
+
+  .levelup-result {
+    display: none;
+    background: #1a1640;
+    border: 1px solid #3a2870;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-top: 14px;
+  }
+  .levelup-result.show { display: block; }
+  .levelup-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .levelup-divider {
+    border-top: 1px dashed #3a2870;
+    margin: 12px 0;
+  }
+  .lv-eta.secondary { color: #38d68a; }
+  .lv-eta-label.secondary { color: #4a9d78; }
+
+  .lv-metric {
+    text-align: center;
+    background: #1a1640;
+    border-radius: 8px;
+    padding: 12px 8px;
+    border: 1px solid #2e2560;
+  }
+  .lv-metric-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #7060a8;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .lv-metric-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(13px, 2.5vw, 16px);
+    font-weight: 700;
+    color: #c8a0ff;
+    line-height: 1.2;
+  }
+  .lv-eta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(15px, 3vw, 20px);
+    font-weight: 700;
+    color: #a060ff;
+    text-align: center;
+    padding: 10px 0 4px;
+  }
+  .lv-eta-label {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #7060a8;
+    text-transform: uppercase;
+  }
+  .lv-warning {
+    font-size: 11px;
+    color: #e8804b;
+    text-align: center;
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Divider ornamental ── */
+  .ornament {
+    text-align: center;
+    color: var(--border);
+    font-size: 16px;
+    letter-spacing: 6px;
+    margin: 4px 0 10px;
+    user-select: none;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    line-height: 1.8;
+  }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    transition: transform 0.3s ease;
+    z-index: 999;
+    white-space: nowrap;
+    max-width: 90vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-sword">⚔</div>
+    <h1>RAGNAROK X</h1>
+    <p>XP Rate Calculator</p>
+    <div class="header-line"></div>
+  </div>
+
+  <!-- Pontos -->
+  <div class="points-grid">
+
+    <!-- Ponto 1 -->
+    <div class="point-card" id="card1">
+      <div class="point-label p1-color"><span class="dot dot-gold"></span>PONTO 1</div>
+      <div class="field-group">
+        <label>Hora</label>
+        <div class="field-row">
+          <input type="text" id="time1" placeholder="HH:MM:SS" maxlength="8">
+          <button class="btn-now" onclick="fillNow('time1')">⏱ AGORA</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Experiência</label>
+        <div class="exp-dual">
+          <div class="exp-input">
+            <span class="exp-tag color-gold">Base</span>
+            <input type="text" id="xp1-base" placeholder="ex: 1250000">
+          </div>
+          <div class="exp-input">
+            <span class="exp-tag color-blue">Job</span>
+            <input type="text" id="xp1-job" placeholder="ex: 340000">
+          </div>
+        </div>
+      </div>
+      <div class="locked-badge" id="badge1">✔ PONTO 1 REGISTRADO</div>
+    </div>
+
+    <!-- Ponto 2 -->
+    <div class="point-card" id="card2">
+      <div class="point-label p2-color"><span class="dot dot-blue"></span>PONTO 2</div>
+      <div class="field-group">
+        <label>Hora</label>
+        <div class="field-row">
+          <input type="text" id="time2" placeholder="HH:MM:SS" maxlength="8">
+          <button class="btn-now" onclick="fillNow('time2')">⏱ AGORA</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Experiência</label>
+        <div class="exp-dual">
+          <div class="exp-input">
+            <span class="exp-tag color-gold">Base</span>
+            <input type="text" id="xp2-base" placeholder="ex: 1350000">
+          </div>
+          <div class="exp-input">
+            <span class="exp-tag color-blue">Job</span>
+            <input type="text" id="xp2-job" placeholder="ex: 365000">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações -->
+  <div class="actions">
+    <button class="btn-main btn-register" onclick="registerPoint1()">🔒 REGISTRAR PONTO 1</button>
+    <button class="btn-main btn-calc"     onclick="calculate()">⚡ CALCULAR</button>
+  </div>
+
+  <!-- Resultados -->
+  <div class="results-panel">
+    <div class="results-header">📊 &nbsp;Resultado</div>
+    <div class="results-time-row">
+      <div class="metric-label">Tempo</div>
+      <div class="metric-value color-text empty" id="res-time">—</div>
+    </div>
+    <div class="results-split">
+      <div class="result-group">
+        <div class="result-group-title color-gold">EXP Base</div>
+        <div class="metrics-grid-3">
+          <div class="metric">
+            <div class="metric-label">Total</div>
+            <div class="metric-value color-gold empty" id="res-total-base">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">/ Min</div>
+            <div class="metric-value color-gold empty" id="res-min-base">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">/ Hora</div>
+            <div class="metric-value color-gold empty" id="res-hour-base">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="result-group">
+        <div class="result-group-title color-blue">EXP Job</div>
+        <div class="metrics-grid-3">
+          <div class="metric">
+            <div class="metric-label">Total</div>
+            <div class="metric-value color-blue empty" id="res-total-job">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">/ Min</div>
+            <div class="metric-value color-blue empty" id="res-min-job">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">/ Hora</div>
+            <div class="metric-value color-blue empty" id="res-hour-job">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Up Predictor -->
+  <div class="levelup-panel">
+    <div class="levelup-header">🔮 &nbsp;Previsão de Level Up</div>
+    <div class="levelup-body">
+
+      <!-- Predictor Base -->
+      <div class="predictor-block">
+        <div class="predictor-title t-gold">EXP BASE</div>
+        <div class="predictor-row">
+          <div class="field-group">
+            <label>Nível atual</label>
+            <div class="field-row"><select id="base-lvl-from"></select></div>
+          </div>
+          <div class="field-group">
+            <label>Nível desejado</label>
+            <div class="field-row"><select id="base-lvl-to"></select></div>
+          </div>
+        </div>
+        <button class="btn-predict" onclick="predictBase()">✦ PREVER BASE</button>
+        <div class="levelup-result" id="base-result">
+          <div class="levelup-result-grid">
+            <div class="lv-metric">
+              <div class="lv-metric-label">Níveis</div>
+              <div class="lv-metric-value" id="base-lv-range">—</div>
+            </div>
+            <div class="lv-metric">
+              <div class="lv-metric-label">EXP Necessária (Total)</div>
+              <div class="lv-metric-value" id="base-lv-needed">—</div>
+            </div>
+          </div>
+          <div class="lv-eta-label">Tempo estimado (intervalo completo)</div>
+          <div class="lv-eta" id="base-lv-eta">—</div>
+
+          <div class="levelup-divider" id="base-divider" style="display:none;"></div>
+          <div class="levelup-result-grid" id="base-current-grid" style="display:none;">
+            <div class="lv-metric">
+              <div class="lv-metric-label">XP Atual considerada</div>
+              <div class="lv-metric-value" id="base-lv-current">—</div>
+            </div>
+            <div class="lv-metric">
+              <div class="lv-metric-label">EXP Restante</div>
+              <div class="lv-metric-value" id="base-lv-remaining">—</div>
+            </div>
+          </div>
+          <div class="lv-eta-label secondary" id="base-eta-net-label" style="display:none;">Tempo restante (considerando sua XP atual)</div>
+          <div class="lv-eta secondary" id="base-lv-eta-net" style="display:none;">—</div>
+
+          <div class="lv-warning" id="base-lv-warning"></div>
+        </div>
+      </div>
+
+      <!-- Predictor Job -->
+      <div class="predictor-block">
+        <div class="predictor-title t-blue">EXP JOB</div>
+        <div class="field-group">
+          <label>Classe</label>
+          <div class="field-row">
+            <select id="job-classe">
+              <option value="1">1ª Classe (Nv. 1–50)</option>
+              <option value="2">2ª Classe (Nv. 1–50)</option>
+              <option value="3">3ª Classe (Nv. 1–70)</option>
+              <option value="4">4ª Classe (Nv. 1–60)</option>
+            </select>
+          </div>
+        </div>
+        <div class="predictor-row">
+          <div class="field-group">
+            <label>Nível atual</label>
+            <div class="field-row"><select id="job-lvl-from"></select></div>
+          </div>
+          <div class="field-group">
+            <label>Nível desejado</label>
+            <div class="field-row"><select id="job-lvl-to"></select></div>
+          </div>
+        </div>
+        <button class="btn-predict" onclick="predictJob()">✦ PREVER JOB</button>
+        <div class="levelup-result" id="job-result">
+          <div class="levelup-result-grid">
+            <div class="lv-metric">
+              <div class="lv-metric-label">Níveis</div>
+              <div class="lv-metric-value" id="job-lv-range">—</div>
+            </div>
+            <div class="lv-metric">
+              <div class="lv-metric-label">EXP Necessária (Total)</div>
+              <div class="lv-metric-value" id="job-lv-needed">—</div>
+            </div>
+          </div>
+          <div class="lv-eta-label">Tempo estimado (intervalo completo)</div>
+          <div class="lv-eta" id="job-lv-eta">—</div>
+
+          <div class="levelup-divider" id="job-divider" style="display:none;"></div>
+          <div class="levelup-result-grid" id="job-current-grid" style="display:none;">
+            <div class="lv-metric">
+              <div class="lv-metric-label">XP Atual considerada</div>
+              <div class="lv-metric-value" id="job-lv-current">—</div>
+            </div>
+            <div class="lv-metric">
+              <div class="lv-metric-label">EXP Restante</div>
+              <div class="lv-metric-value" id="job-lv-remaining">—</div>
+            </div>
+          </div>
+          <div class="lv-eta-label secondary" id="job-eta-net-label" style="display:none;">Tempo restante (considerando sua XP atual)</div>
+          <div class="lv-eta secondary" id="job-lv-eta-net" style="display:none;">—</div>
+
+          <div class="lv-warning" id="job-lv-warning"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ornament">· · ·</div>
+
+  <!-- Reset -->
+  <div style="display:flex; justify-content:flex-end;">
+    <button class="btn-main btn-reset" style="width:140px;" onclick="resetAll()">🔄 RESETAR</button>
+  </div>
+
+  <div class="footer">
+    Registre o Ponto 1 → jogue por alguns minutos → preencha o Ponto 2 → Calcule<br>
+    O botão ⏱ AGORA preenche a hora automaticamente
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  /* ============================================================
+     TABELAS DE EXP
+     Cada array: índice 0 = Nível 1, valor = EXP necessária para
+     avançar do Nível (i+1) para o Nível (i+2).
+  ============================================================ */
+
+  const BASE_EXP_TABLE = [
+    10000,15000,20000,25000,30000,35000,40000,45000,50000,55000,
+    60000,65000,70000,75000,90000,105000,122500,140000,160000,180000,
+    220000,260000,275000,290000,305000,335000,430000,525000,625000,730000,
+    835000,940000,1050000,1165000,1285000,1405000,1530000,1660000,1785000,2300000,
+    2825000,3385000,3985000,4625000,5305000,6020000,6780000,7575000,8410000,10440000,
+    12420000,14505000,16700000,19005000,21500000,24110000,26830000,29665000,32615000,53440000,
+    61150000,69220000,77640000,79770000,81900000,84030000,86160000,88290000,90420000,93450000,
+    95580000,97710000,99840000,101970000,104100000,106230000,108360000,110490000,112620000,116725000,
+    118855000,120990000,123120000,125260000,127390000,129525000,159945000,196080000,238140000,248660000,
+    257525000,266550000,275720000,285050000,294525000,304160000,313940000,323880000,333965000
+  ]; // Nível 1 até 99 (leva ao Nível 100)
+  const BASE_MAX_LEVEL = 100;
+
+  const JOB_TABLES = {
+    1: [ // 1ª Classe — Nível 1 a 49 (leva ao Nível 50)
+      19500,23500,27500,31500,35000,39000,48000,52000,61500,66500,
+      78000,90000,95500,109500,123500,130000,158500,187500,198000,207000,
+      217500,228500,250500,260000,268500,277000,286000,297000,306500,319500,
+      328500,341000,350500,360000,372000,381500,395000,404500,414500,429500,
+      439000,455500,465500,475000,491000,501000,511000,528000,538500
+    ],
+    2: [ // 2ª Classe — Nível 1 a 49 (leva ao Nível 50)
+      457000,567000,670000,780500,885000,1059500,1171000,1348500,1465500,1658000,
+      1780500,1990000,2118500,2345500,2479500,2723500,2863000,3122000,3267500,3546500,
+      3834500,3991000,4296500,4458500,4914000,5086000,5471500,5651000,6050500,6236500,
+      6423000,6846500,7039000,7480500,7680000,8169500,8376000,8583000,9097000,9311500,
+      9525500,10062500,10284000,10839500,11067500,11296000,11877000,12112000,12347000
+    ],
+    3: [ // 3ª Classe — Nível 1 a 69 (leva ao Nível 70)
+      1188000,2375500,3563000,4750500,5938000,7125500,8313000,9500500,10688000,12230000,
+      13453000,14676000,15899000,17620000,18878500,20137000,21998000,23292000,24586000,25880000,
+      27919500,29249000,31395000,32760000,34125000,36413000,37813500,40208000,41644000,44145000,
+      45616500,48224000,49731000,52955000,54512500,57348000,60254500,61883000,64896000,67980000,
+      69679500,72870000,76131500,77902000,81270000,84709000,88219000,92520000,94447500,98150000,
+      101923500,105768000,109683500,113670000,117727500,121856000,126055500,130326000,132573000,137850000,
+      144478500,149048000,153688500,158400000,163182500,168036000,172960500,177956000,184057500
+    ],
+    4: [ // 4ª Classe — Nível 1 a 59 (leva ao Nível 60)
+      2121000,4242000,6363000,8484000,10605000,12726000,14846500,17211000,19362000,21513500,
+      25816000,30118500,34421500,38724000,43026500,47329500,52360000,56723500,61087000,65450500,
+      76358500,88483000,99543500,110604000,123334000,134546000,147735000,159099000,172741000,184257000,
+      199635000,211378000,226005000,240944500,252991500,268379000,284079500,300075000,312578500,329040000,
+      358604000,388787000,419567500,453516000,485666000,518432500,551800000,557890500,563973000,570064000,
+      576147500,588323500,600992500,608850000,616716500,624571000,632434000,636360000,640286000
+    ]
+  };
+  const JOB_MAX_LEVEL = { 1: 50, 2: 50, 3: 70, 4: 60 };
+
+  function sumRange(table, fromLevel, toLevel) {
+    let total = 0;
+    for (let lv = fromLevel; lv < toLevel; lv++) total += table[lv - 1];
+    return total;
+  }
+
+  /* ============================================================
+     ESTADO
+  ============================================================ */
+  let p1time = null, p1xpBase = null, p1xpJob = null;
+  let xpPerMinBase = null, xpPerMinJob = null;
+  let currentXPBase = null, currentXPJob = null; // XP mais recente digitada (progresso dentro do nível atual)
+
+  /* ============================================================
+     HELPERS
+  ============================================================ */
+  function fillNow(id) {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById(id).value = `${h}:${m}:${s}`;
+  }
+
+  function parseTime(str) {
+    str = str.trim();
+    const parts = str.split(':').map(Number);
+    if (parts.some(isNaN)) throw new Error('Hora inválida. Use HH:MM ou HH:MM:SS');
+    if (parts.length === 2) parts.push(0);
+    if (parts.length !== 3) throw new Error('Hora inválida.');
+    const [h,m,s] = parts;
+    const d = new Date();
+    d.setHours(h, m, s, 0);
+    return d;
+  }
+
+  function parseXP(str) {
+    const n = parseInt(String(str).replace(/[.,\s]/g, ''));
+    if (isNaN(n)) throw new Error('XP inválida.');
+    return n;
+  }
+
+  function fmtXP(n) { return Math.round(n).toLocaleString('pt-BR'); }
+
+  function fmtTime(sec) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.floor(sec % 60);
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    return `${m}m ${s}s`;
+  }
+
+  function fmtETA(mins) {
+    const h = Math.floor(mins / 60);
+    const m = Math.floor(mins % 60);
+    const s = Math.round((mins * 60) % 60);
+    let eta = '';
+    if (h > 0) eta += `${h}h `;
+    if (m > 0 || h > 0) eta += `${m}m `;
+    eta += `${s}s`;
+    return eta.trim();
+  }
+
+  function toast(msg, color) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.borderColor = color || 'var(--border)';
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  const setVal = (id, val, hasData) => {
+    const el = document.getElementById(id);
+    el.textContent = val;
+    el.classList.toggle('empty', !hasData);
+  };
+
+  /* ============================================================
+     REGISTRO / CÁLCULO
+  ============================================================ */
+  function registerPoint1() {
+    try {
+      const t     = parseTime(document.getElementById('time1').value);
+      const xpB   = parseXP(document.getElementById('xp1-base').value);
+      const xpJ   = parseXP(document.getElementById('xp1-job').value);
+      p1time = t; p1xpBase = xpB; p1xpJob = xpJ;
+      currentXPBase = xpB; currentXPJob = xpJ;
+      document.getElementById('card1').classList.add('locked');
+      document.getElementById('badge1').classList.add('show');
+      toast('✔ Ponto 1 registrado!', 'var(--green)');
+    } catch(e) {
+      toast('⚠ ' + e.message, 'var(--red)');
+    }
+  }
+
+  function calculate() {
+    if (!p1time || p1xpBase === null || p1xpJob === null) {
+      toast('⚠ Registre o Ponto 1 primeiro!', 'var(--red)');
+      return;
+    }
+    let t2, xp2Base, xp2Job;
+    try {
+      t2      = parseTime(document.getElementById('time2').value);
+      xp2Base = parseXP(document.getElementById('xp2-base').value);
+      xp2Job  = parseXP(document.getElementById('xp2-job').value);
+    } catch(e) {
+      toast('⚠ ' + e.message, 'var(--red)');
+      return;
+    }
+
+    let diffSec = (t2 - p1time) / 1000;
+    if (diffSec < 0) diffSec += 86400;
+    if (diffSec === 0) { toast('⚠ O tempo não pode ser zero!', 'var(--red)'); return; }
+
+    const totalBase = xp2Base - p1xpBase;
+    const totalJob  = xp2Job  - p1xpJob;
+    if (totalBase < 0 || totalJob < 0) { toast('⚠ XP do Ponto 2 menor que o do Ponto 1!', 'var(--red)'); return; }
+
+    const diffMin = diffSec / 60;
+    const minBase = totalBase / diffMin, hourBase = minBase * 60;
+    const minJob  = totalJob  / diffMin, hourJob  = minJob  * 60;
+    xpPerMinBase = minBase;
+    xpPerMinJob  = minJob;
+    currentXPBase = xp2Base;
+    currentXPJob  = xp2Job;
+
+    setVal('res-time', fmtTime(diffSec), true);
+    setVal('res-total-base', fmtXP(totalBase), true);
+    setVal('res-min-base',   fmtXP(minBase),   true);
+    setVal('res-hour-base',  fmtXP(hourBase),  true);
+    setVal('res-total-job',  fmtXP(totalJob),  true);
+    setVal('res-min-job',    fmtXP(minJob),    true);
+    setVal('res-hour-job',   fmtXP(hourJob),   true);
+
+    toast('✔ Calculado com sucesso!', 'var(--green)');
+  }
+
+  /* ============================================================
+     PREVISÃO DE LEVEL UP
+  ============================================================ */
+  function populateSelect(el, min, max, selected) {
+    el.innerHTML = '';
+    for (let i = min; i <= max; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = 'Nível ' + i;
+      el.appendChild(opt);
+    }
+    if (selected !== undefined && selected >= min && selected <= max) el.value = selected;
+  }
+
+  function initBaseSelects() {
+    const from = document.getElementById('base-lvl-from');
+    const to   = document.getElementById('base-lvl-to');
+    populateSelect(from, 1, BASE_MAX_LEVEL - 1, 1);
+    populateSelect(to, 2, BASE_MAX_LEVEL, 2);
+  }
+
+  function initJobSelects() {
+    const classe = parseInt(document.getElementById('job-classe').value);
+    const max = JOB_MAX_LEVEL[classe];
+    const from = document.getElementById('job-lvl-from');
+    const to   = document.getElementById('job-lvl-to');
+    populateSelect(from, 1, max - 1, 1);
+    populateSelect(to, 2, max, 2);
+  }
+
+  document.getElementById('job-classe').addEventListener('change', initJobSelects);
+
+  function predictBase() {
+    const from = parseInt(document.getElementById('base-lvl-from').value);
+    const to   = parseInt(document.getElementById('base-lvl-to').value);
+    if (to <= from) { toast('⚠ Nível desejado deve ser maior que o atual.', 'var(--red)'); return; }
+
+    document.getElementById('base-lv-warning').textContent = '';
+    const needed = sumRange(BASE_EXP_TABLE, from, to);
+    document.getElementById('base-lv-range').textContent  = `${from} → ${to}`;
+    document.getElementById('base-lv-needed').textContent = fmtXP(needed);
+
+    const etaEl  = document.getElementById('base-lv-eta');
+    const warnEl = document.getElementById('base-lv-warning');
+    if (!xpPerMinBase || xpPerMinBase <= 0) {
+      etaEl.textContent  = '?';
+      warnEl.textContent = '⚠ Calcule a taxa de XP Base primeiro (Ponto 1 + Ponto 2).';
+    } else {
+      etaEl.textContent  = fmtETA(needed / xpPerMinBase);
+      warnEl.textContent = '';
+    }
+
+    updateNetPrediction('base', needed, currentXPBase, xpPerMinBase);
+
+    document.getElementById('base-result').classList.add('show');
+    toast('✔ Previsão Base calculada!', 'var(--gold2)');
+  }
+
+  // Calcula a EXP restante descontando a XP atual (progresso já feito dentro do
+  // intervalo de níveis selecionado) e o tempo restante exato com base nela.
+  function updateNetPrediction(prefix, needed, currentXP, ratePerMin) {
+    const divider   = document.getElementById(`${prefix}-divider`);
+    const grid      = document.getElementById(`${prefix}-current-grid`);
+    const etaLabel  = document.getElementById(`${prefix}-eta-net-label`);
+    const etaNetEl  = document.getElementById(`${prefix}-lv-eta-net`);
+    const warnEl    = document.getElementById(`${prefix}-lv-warning`);
+
+    if (currentXP === null) {
+      divider.style.display = 'none';
+      grid.style.display = 'none';
+      etaLabel.style.display = 'none';
+      etaNetEl.style.display = 'none';
+      return;
+    }
+
+    const remaining = Math.max(0, needed - currentXP);
+    document.getElementById(`${prefix}-lv-current`).textContent   = fmtXP(currentXP);
+    document.getElementById(`${prefix}-lv-remaining`).textContent = fmtXP(remaining);
+
+    divider.style.display = 'block';
+    grid.style.display = 'grid';
+    etaLabel.style.display = 'block';
+    etaNetEl.style.display = 'block';
+
+    if (currentXP > needed) {
+      warnEl.textContent = warnEl.textContent || '⚠ A XP atual informada é maior que a EXP necessária — confira se o nível atual selecionado bate com o registrado.';
+    }
+
+    if (!ratePerMin || ratePerMin <= 0) {
+      etaNetEl.textContent = '?';
+    } else {
+      etaNetEl.textContent = remaining === 0 ? '0s' : fmtETA(remaining / ratePerMin);
+    }
+  }
+
+  function predictJob() {
+    const classe = parseInt(document.getElementById('job-classe').value);
+    const from   = parseInt(document.getElementById('job-lvl-from').value);
+    const to     = parseInt(document.getElementById('job-lvl-to').value);
+    if (to <= from) { toast('⚠ Nível desejado deve ser maior que o atual.', 'var(--red)'); return; }
+
+    document.getElementById('job-lv-warning').textContent = '';
+    const needed = sumRange(JOB_TABLES[classe], from, to);
+    document.getElementById('job-lv-range').textContent  = `${from} → ${to}`;
+    document.getElementById('job-lv-needed').textContent = fmtXP(needed);
+
+    const etaEl  = document.getElementById('job-lv-eta');
+    const warnEl = document.getElementById('job-lv-warning');
+    if (!xpPerMinJob || xpPerMinJob <= 0) {
+      etaEl.textContent  = '?';
+      warnEl.textContent = '⚠ Calcule a taxa de XP Job primeiro (Ponto 1 + Ponto 2).';
+    } else {
+      etaEl.textContent  = fmtETA(needed / xpPerMinJob);
+      warnEl.textContent = '';
+    }
+
+    updateNetPrediction('job', needed, currentXPJob, xpPerMinJob);
+
+    document.getElementById('job-result').classList.add('show');
+    toast('✔ Previsão Job calculada!', 'var(--blue)');
+  }
+
+  /* ============================================================
+     RESET
+  ============================================================ */
+  function resetAll() {
+    p1time = null; p1xpBase = null; p1xpJob = null;
+    xpPerMinBase = null; xpPerMinJob = null;
+    currentXPBase = null; currentXPJob = null;
+
+    ['time1','xp1-base','xp1-job','time2','xp2-base','xp2-job'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('card1').classList.remove('locked');
+    document.getElementById('badge1').classList.remove('show');
+
+    setVal('res-time', '—', false);
+    ['res-total-base','res-min-base','res-hour-base','res-total-job','res-min-job','res-hour-job']
+      .forEach(id => setVal(id, '—', false));
+
+    document.getElementById('base-result').classList.remove('show');
+    document.getElementById('job-result').classList.remove('show');
+    document.getElementById('base-lv-warning').textContent = '';
+    document.getElementById('job-lv-warning').textContent = '';
+    ['base','job'].forEach(prefix => {
+      document.getElementById(`${prefix}-divider`).style.display = 'none';
+      document.getElementById(`${prefix}-current-grid`).style.display = 'none';
+      document.getElementById(`${prefix}-eta-net-label`).style.display = 'none';
+      document.getElementById(`${prefix}-lv-eta-net`).style.display = 'none';
+    });
+
+    toast('Resetado!');
+  }
+
+  /* ============================================================
+     MÁSCARA DE HORA + INIT
+  ============================================================ */
+  ['time1','time2'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+      let v = this.value.replace(/[^0-9]/g,'');
+      if (v.length > 2) v = v.slice(0,2) + ':' + v.slice(2);
+      if (v.length > 5) v = v.slice(0,5) + ':' + v.slice(5);
+      this.value = v.slice(0, 8);
+    });
+  });
+
+  initBaseSelects();
+  initJobSelects();
+</script>
+</body>
+</html>
