@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚔ Ragnarok X — XP Calculator</title>
+<meta name="description" content="Meça sua taxa de EXP Base e Job e estime o tempo para alcançar o próximo nível em Ragnarok X.">
+<meta name="theme-color" content="#07090f">
+<title>Calculadora de XP | Ragnarok X</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2212%22 fill=%22%2307090f%22/><text x=%2232%22 y=%2244%22 text-anchor=%22middle%22 font-size=%2240%22>⚔</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,9 +24,9 @@
     --gold2:     #f5d07a;
     --blue:      #4a8de8;
     --green:     #38d68a;
-    --red:       #e84a5f;
+    --red:       #f46b7d;
     --text:      #dde2f5;
-    --muted:     #6a76a8;
+    --muted:     #9aa5d2;
     --radius:    10px;
   }
 
@@ -88,8 +93,10 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px 18px;
+    min-width: 0;
     transition: border-color 0.2s;
   }
+  fieldset.point-card { margin: 0; }
   .point-card.locked { border-color: var(--green); box-shadow: 0 0 16px #38d68a18; }
 
   .point-label {
@@ -100,6 +107,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 0 4px;
   }
   .point-label span.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .p1-color { color: var(--gold); }
@@ -118,7 +126,7 @@
     margin-bottom: 6px;
   }
   .field-row { display: flex; gap: 6px; align-items: center; }
-  .field-row input, .field-row select {
+  .field-row input, .field-row select, .exp-input input {
     flex: 1;
     min-width: 0;
     background: var(--bg2);
@@ -132,12 +140,13 @@
     transition: border-color 0.2s;
   }
   .field-row select { font-family: 'Rajdhani', sans-serif; font-weight: 600; cursor: pointer; }
-  .field-row input:focus, .field-row select:focus { border-color: var(--gold); }
-  .field-row input::placeholder { color: var(--muted); opacity: 0.5; }
+  .field-row input:focus, .field-row select:focus, .exp-input input:focus { border-color: var(--gold); }
+  .field-row input::placeholder, .exp-input input::placeholder { color: var(--muted); opacity: 0.72; }
 
   /* Duplo EXP Base / Job */
   .exp-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .exp-input { display: flex; flex-direction: column; gap: 5px; }
+  .exp-input { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .exp-input input { width: 100%; min-width: 0; }
   .exp-tag {
     font-size: 10px;
     font-weight: 700;
@@ -346,7 +355,7 @@
   .lv-metric-label {
     font-size: 10px;
     letter-spacing: 1px;
-    color: #7060a8;
+    color: #aa96dc;
     text-transform: uppercase;
     margin-bottom: 6px;
   }
@@ -369,7 +378,7 @@
     text-align: center;
     font-size: 11px;
     letter-spacing: 1.5px;
-    color: #7060a8;
+    color: #aa96dc;
     text-transform: uppercase;
   }
   .lv-warning {
@@ -413,92 +422,180 @@
     border-radius: 8px;
     font-size: 13px;
     letter-spacing: 0.5px;
-    transition: transform 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.3s ease, opacity 0.2s ease, visibility 0.2s ease;
     z-index: 999;
     white-space: nowrap;
     max-width: 90vw;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 16px;
+    top: 12px;
+    z-index: 1000;
+    transform: translateY(-160%);
+    background: var(--gold);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-weight: 700;
+  }
+  .skip-link:focus { transform: translateY(0); }
+
+  :where(button, input, select, a):focus-visible {
+    outline: 3px solid var(--gold2);
+    outline-offset: 3px;
+  }
+
+  .journey {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    margin: -14px 0 22px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--border);
+  }
+  .journey li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+    background: var(--bg2);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .journey strong {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    color: var(--gold2);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+  }
+  .helper {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .footer a { color: var(--gold2); }
+
+  @media (max-width: 560px) {
+    body { padding: 22px 12px 36px; }
+    .journey { grid-template-columns: 1fr; }
+    .journey li { padding: 8px 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
 </style>
 </head>
 <body>
 
-<div class="wrapper">
+<a class="skip-link" href="#main-content">Ir para a calculadora</a>
+<main class="wrapper" id="main-content">
 
   <!-- Header -->
   <div class="header">
-    <div class="header-sword">⚔</div>
-    <h1>RAGNAROK X</h1>
-    <p>XP Rate Calculator</p>
+    <div class="header-sword" aria-hidden="true">⚔</div>
+    <h1>Ragnarok X</h1>
+    <p>Calculadora de taxa de experiência</p>
     <div class="header-line"></div>
   </div>
+
+  <ol class="journey" aria-label="Etapas da calculadora">
+    <li><strong>1</strong> Registre o início</li>
+    <li><strong>2</strong> Meça o progresso</li>
+    <li><strong>3</strong> Planeje o nível</li>
+  </ol>
 
   <!-- Pontos -->
   <div class="points-grid">
 
     <!-- Ponto 1 -->
-    <div class="point-card" id="card1">
-      <div class="point-label p1-color"><span class="dot dot-gold"></span>PONTO 1</div>
+    <fieldset class="point-card" id="card1">
+      <legend class="point-label p1-color"><span class="dot dot-gold"></span>Ponto 1 — início</legend>
       <div class="field-group">
-        <label>Hora</label>
+        <label for="time1">Hora</label>
         <div class="field-row">
-          <input type="text" id="time1" placeholder="HH:MM:SS" maxlength="8">
-          <button class="btn-now" onclick="fillNow('time1')">⏱ AGORA</button>
+          <input type="text" id="time1" placeholder="HH:MM:SS" maxlength="8" inputmode="numeric" autocomplete="off">
+          <button type="button" class="btn-now" aria-label="Usar horário atual no ponto 1" onclick="fillNow('time1')">⏱ Agora</button>
         </div>
       </div>
       <div class="field-group">
         <label>Experiência</label>
         <div class="exp-dual">
           <div class="exp-input">
-            <span class="exp-tag color-gold">Base</span>
-            <input type="text" id="xp1-base" placeholder="ex: 1250000">
+            <label class="exp-tag color-gold" for="xp1-base">Base</label>
+            <input type="text" id="xp1-base" placeholder="ex: 1.250.000" inputmode="numeric" autocomplete="off">
           </div>
           <div class="exp-input">
-            <span class="exp-tag color-blue">Job</span>
-            <input type="text" id="xp1-job" placeholder="ex: 340000">
+            <label class="exp-tag color-blue" for="xp1-job">Job</label>
+            <input type="text" id="xp1-job" placeholder="ex: 340.000" inputmode="numeric" autocomplete="off">
           </div>
         </div>
       </div>
       <div class="locked-badge" id="badge1">✔ PONTO 1 REGISTRADO</div>
-    </div>
+    </fieldset>
 
     <!-- Ponto 2 -->
-    <div class="point-card" id="card2">
-      <div class="point-label p2-color"><span class="dot dot-blue"></span>PONTO 2</div>
+    <fieldset class="point-card" id="card2">
+      <legend class="point-label p2-color"><span class="dot dot-blue"></span>Ponto 2 — fim</legend>
       <div class="field-group">
-        <label>Hora</label>
+        <label for="time2">Hora</label>
         <div class="field-row">
-          <input type="text" id="time2" placeholder="HH:MM:SS" maxlength="8">
-          <button class="btn-now" onclick="fillNow('time2')">⏱ AGORA</button>
+          <input type="text" id="time2" placeholder="HH:MM:SS" maxlength="8" inputmode="numeric" autocomplete="off">
+          <button type="button" class="btn-now" aria-label="Usar horário atual no ponto 2" onclick="fillNow('time2')">⏱ Agora</button>
         </div>
       </div>
       <div class="field-group">
         <label>Experiência</label>
         <div class="exp-dual">
           <div class="exp-input">
-            <span class="exp-tag color-gold">Base</span>
-            <input type="text" id="xp2-base" placeholder="ex: 1350000">
+            <label class="exp-tag color-gold" for="xp2-base">Base</label>
+            <input type="text" id="xp2-base" placeholder="ex: 1.350.000" inputmode="numeric" autocomplete="off">
           </div>
           <div class="exp-input">
-            <span class="exp-tag color-blue">Job</span>
-            <input type="text" id="xp2-job" placeholder="ex: 365000">
+            <label class="exp-tag color-blue" for="xp2-job">Job</label>
+            <input type="text" id="xp2-job" placeholder="ex: 365.000" inputmode="numeric" autocomplete="off">
           </div>
         </div>
       </div>
-    </div>
+    </fieldset>
   </div>
 
   <!-- Ações -->
   <div class="actions">
-    <button class="btn-main btn-register" onclick="registerPoint1()">🔒 REGISTRAR PONTO 1</button>
-    <button class="btn-main btn-calc"     onclick="calculate()">⚡ CALCULAR</button>
+    <button type="button" class="btn-main btn-register" onclick="registerPoint1()">🔒 Registrar ponto 1</button>
+    <button type="button" class="btn-main btn-calc" onclick="calculate()">⚡ Calcular taxa</button>
   </div>
 
   <!-- Resultados -->
-  <div class="results-panel">
-    <div class="results-header">📊 &nbsp;Resultado</div>
+  <section class="results-panel" aria-labelledby="results-heading" aria-live="polite">
+    <h2 class="results-header" id="results-heading">📊 &nbsp;Resultado da medição</h2>
     <div class="results-time-row">
       <div class="metric-label">Tempo</div>
       <div class="metric-value color-text empty" id="res-time">—</div>
@@ -539,11 +636,11 @@
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Level Up Predictor -->
-  <div class="levelup-panel">
-    <div class="levelup-header">🔮 &nbsp;Previsão de Level Up</div>
+  <section class="levelup-panel" aria-labelledby="prediction-heading">
+    <h2 class="levelup-header" id="prediction-heading">🔮 &nbsp;Previsão de nível</h2>
     <div class="levelup-body">
 
       <!-- Predictor Base -->
@@ -551,15 +648,15 @@
         <div class="predictor-title t-gold">EXP BASE</div>
         <div class="predictor-row">
           <div class="field-group">
-            <label>Nível atual</label>
+            <label for="base-lvl-from">Nível atual</label>
             <div class="field-row"><select id="base-lvl-from"></select></div>
           </div>
           <div class="field-group">
-            <label>Nível desejado</label>
+            <label for="base-lvl-to">Nível desejado</label>
             <div class="field-row"><select id="base-lvl-to"></select></div>
           </div>
         </div>
-        <button class="btn-predict" onclick="predictBase()">✦ PREVER BASE</button>
+        <button type="button" class="btn-predict" onclick="predictBase()">✦ Prever Base</button>
         <div class="levelup-result" id="base-result">
           <div class="levelup-result-grid">
             <div class="lv-metric">
@@ -596,7 +693,7 @@
       <div class="predictor-block">
         <div class="predictor-title t-blue">EXP JOB</div>
         <div class="field-group">
-          <label>Classe</label>
+          <label for="job-classe">Classe</label>
           <div class="field-row">
             <select id="job-classe">
               <option value="1">1ª Classe (Nv. 1–50)</option>
@@ -608,15 +705,15 @@
         </div>
         <div class="predictor-row">
           <div class="field-group">
-            <label>Nível atual</label>
+            <label for="job-lvl-from">Nível atual</label>
             <div class="field-row"><select id="job-lvl-from"></select></div>
           </div>
           <div class="field-group">
-            <label>Nível desejado</label>
+            <label for="job-lvl-to">Nível desejado</label>
             <div class="field-row"><select id="job-lvl-to"></select></div>
           </div>
         </div>
-        <button class="btn-predict" onclick="predictJob()">✦ PREVER JOB</button>
+        <button type="button" class="btn-predict" onclick="predictJob()">✦ Prever Job</button>
         <div class="levelup-result" id="job-result">
           <div class="levelup-result-grid">
             <div class="lv-metric">
@@ -650,84 +747,38 @@
       </div>
 
     </div>
-  </div>
+  </section>
 
   <div class="ornament">· · ·</div>
 
   <!-- Reset -->
   <div style="display:flex; justify-content:flex-end;">
-    <button class="btn-main btn-reset" style="width:140px;" onclick="resetAll()">🔄 RESETAR</button>
+    <button type="button" class="btn-main btn-reset" style="width:140px;" onclick="resetAll()">🔄 Resetar</button>
   </div>
 
   <div class="footer">
     Registre o Ponto 1 → jogue por alguns minutos → preencha o Ponto 2 → Calcule<br>
-    O botão ⏱ AGORA preenche a hora automaticamente
+    Seus dados ficam apenas neste navegador · <a href="https://github.com/rhoneycruz-ui/calculadora-xp-ragnarok">Código no GitHub</a>
   </div>
-</div>
+</main>
 
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
-<script>
-  /* ============================================================
-     TABELAS DE EXP
-     Cada array: índice 0 = Nível 1, valor = EXP necessária para
-     avançar do Nível (i+1) para o Nível (i+2).
-  ============================================================ */
-
-  const BASE_EXP_TABLE = [
-    10000,15000,20000,25000,30000,35000,40000,45000,50000,55000,
-    60000,65000,70000,75000,90000,105000,122500,140000,160000,180000,
-    220000,260000,275000,290000,305000,335000,430000,525000,625000,730000,
-    835000,940000,1050000,1165000,1285000,1405000,1530000,1660000,1785000,2300000,
-    2825000,3385000,3985000,4625000,5305000,6020000,6780000,7575000,8410000,10440000,
-    12420000,14505000,16700000,19005000,21500000,24110000,26830000,29665000,32615000,53440000,
-    61150000,69220000,77640000,79770000,81900000,84030000,86160000,88290000,90420000,93450000,
-    95580000,97710000,99840000,101970000,104100000,106230000,108360000,110490000,112620000,116725000,
-    118855000,120990000,123120000,125260000,127390000,129525000,159945000,196080000,238140000,248660000,
-    257525000,266550000,275720000,285050000,294525000,304160000,313940000,323880000,333965000
-  ]; // Nível 1 até 99 (leva ao Nível 100)
-  const BASE_MAX_LEVEL = 100;
-
-  const JOB_TABLES = {
-    1: [ // 1ª Classe — Nível 1 a 49 (leva ao Nível 50)
-      19500,23500,27500,31500,35000,39000,48000,52000,61500,66500,
-      78000,90000,95500,109500,123500,130000,158500,187500,198000,207000,
-      217500,228500,250500,260000,268500,277000,286000,297000,306500,319500,
-      328500,341000,350500,360000,372000,381500,395000,404500,414500,429500,
-      439000,455500,465500,475000,491000,501000,511000,528000,538500
-    ],
-    2: [ // 2ª Classe — Nível 1 a 49 (leva ao Nível 50)
-      457000,567000,670000,780500,885000,1059500,1171000,1348500,1465500,1658000,
-      1780500,1990000,2118500,2345500,2479500,2723500,2863000,3122000,3267500,3546500,
-      3834500,3991000,4296500,4458500,4914000,5086000,5471500,5651000,6050500,6236500,
-      6423000,6846500,7039000,7480500,7680000,8169500,8376000,8583000,9097000,9311500,
-      9525500,10062500,10284000,10839500,11067500,11296000,11877000,12112000,12347000
-    ],
-    3: [ // 3ª Classe — Nível 1 a 69 (leva ao Nível 70)
-      1188000,2375500,3563000,4750500,5938000,7125500,8313000,9500500,10688000,12230000,
-      13453000,14676000,15899000,17620000,18878500,20137000,21998000,23292000,24586000,25880000,
-      27919500,29249000,31395000,32760000,34125000,36413000,37813500,40208000,41644000,44145000,
-      45616500,48224000,49731000,52955000,54512500,57348000,60254500,61883000,64896000,67980000,
-      69679500,72870000,76131500,77902000,81270000,84709000,88219000,92520000,94447500,98150000,
-      101923500,105768000,109683500,113670000,117727500,121856000,126055500,130326000,132573000,137850000,
-      144478500,149048000,153688500,158400000,163182500,168036000,172960500,177956000,184057500
-    ],
-    4: [ // 4ª Classe — Nível 1 a 59 (leva ao Nível 60)
-      2121000,4242000,6363000,8484000,10605000,12726000,14846500,17211000,19362000,21513500,
-      25816000,30118500,34421500,38724000,43026500,47329500,52360000,56723500,61087000,65450500,
-      76358500,88483000,99543500,110604000,123334000,134546000,147735000,159099000,172741000,184257000,
-      199635000,211378000,226005000,240944500,252991500,268379000,284079500,300075000,312578500,329040000,
-      358604000,388787000,419567500,453516000,485666000,518432500,551800000,557890500,563973000,570064000,
-      576147500,588323500,600992500,608850000,616716500,624571000,632434000,636360000,640286000
-    ]
-  };
-  const JOB_MAX_LEVEL = { 1: 50, 2: 50, 3: 70, 4: 60 };
-
-  function sumRange(table, fromLevel, toLevel) {
-    let total = 0;
-    for (let lv = fromLevel; lv < toLevel; lv++) total += table[lv - 1];
-    return total;
-  }
+<script type="module">
+  import {
+    calculatePrediction,
+    calculateRates,
+    parseTimeToSeconds,
+    parseXP,
+    sumXpForLevels,
+    formatDurationFromMinutes,
+  } from './src/calculator.js';
+  import {
+    BASE_EXP_TABLE,
+    BASE_MAX_LEVEL,
+    JOB_MAX_LEVEL,
+    JOB_TABLES,
+  } from './src/experience-data.js';
 
   /* ============================================================
      ESTADO
@@ -747,24 +798,6 @@
     document.getElementById(id).value = `${h}:${m}:${s}`;
   }
 
-  function parseTime(str) {
-    str = str.trim();
-    const parts = str.split(':').map(Number);
-    if (parts.some(isNaN)) throw new Error('Hora inválida. Use HH:MM ou HH:MM:SS');
-    if (parts.length === 2) parts.push(0);
-    if (parts.length !== 3) throw new Error('Hora inválida.');
-    const [h,m,s] = parts;
-    const d = new Date();
-    d.setHours(h, m, s, 0);
-    return d;
-  }
-
-  function parseXP(str) {
-    const n = parseInt(String(str).replace(/[.,\s]/g, ''));
-    if (isNaN(n)) throw new Error('XP inválida.');
-    return n;
-  }
-
   function fmtXP(n) { return Math.round(n).toLocaleString('pt-BR'); }
 
   function fmtTime(sec) {
@@ -776,14 +809,7 @@
   }
 
   function fmtETA(mins) {
-    const h = Math.floor(mins / 60);
-    const m = Math.floor(mins % 60);
-    const s = Math.round((mins * 60) % 60);
-    let eta = '';
-    if (h > 0) eta += `${h}h `;
-    if (m > 0 || h > 0) eta += `${m}m `;
-    eta += `${s}s`;
-    return eta.trim();
+    return formatDurationFromMinutes(mins);
   }
 
   function toast(msg, color) {
@@ -805,7 +831,8 @@
   ============================================================ */
   function registerPoint1() {
     try {
-      const t     = parseTime(document.getElementById('time1').value);
+      const t     = document.getElementById('time1').value;
+      parseTimeToSeconds(t);
       const xpB   = parseXP(document.getElementById('xp1-base').value);
       const xpJ   = parseXP(document.getElementById('xp1-job').value);
       p1time = t; p1xpBase = xpB; p1xpJob = xpJ;
@@ -823,41 +850,35 @@
       toast('⚠ Registre o Ponto 1 primeiro!', 'var(--red)');
       return;
     }
-    let t2, xp2Base, xp2Job;
     try {
-      t2      = parseTime(document.getElementById('time2').value);
-      xp2Base = parseXP(document.getElementById('xp2-base').value);
-      xp2Job  = parseXP(document.getElementById('xp2-job').value);
+      const result = calculateRates({
+        startTime: p1time,
+        endTime: document.getElementById('time2').value,
+        startBase: p1xpBase,
+        endBase: document.getElementById('xp2-base').value,
+        startJob: p1xpJob,
+        endJob: document.getElementById('xp2-job').value,
+      });
+      const xp2Base = parseXP(document.getElementById('xp2-base').value);
+      const xp2Job = parseXP(document.getElementById('xp2-job').value);
+
+      xpPerMinBase = result.base.perMinute;
+      xpPerMinJob = result.job.perMinute;
+      currentXPBase = xp2Base;
+      currentXPJob = xp2Job;
+
+      setVal('res-time', fmtTime(result.elapsedSeconds), true);
+      setVal('res-total-base', fmtXP(result.base.gained), true);
+      setVal('res-min-base', fmtXP(result.base.perMinute), true);
+      setVal('res-hour-base', fmtXP(result.base.perHour), true);
+      setVal('res-total-job', fmtXP(result.job.gained), true);
+      setVal('res-min-job', fmtXP(result.job.perMinute), true);
+      setVal('res-hour-job', fmtXP(result.job.perHour), true);
+
+      toast('✔ Taxa calculada com sucesso!', 'var(--green)');
     } catch(e) {
       toast('⚠ ' + e.message, 'var(--red)');
-      return;
     }
-
-    let diffSec = (t2 - p1time) / 1000;
-    if (diffSec < 0) diffSec += 86400;
-    if (diffSec === 0) { toast('⚠ O tempo não pode ser zero!', 'var(--red)'); return; }
-
-    const totalBase = xp2Base - p1xpBase;
-    const totalJob  = xp2Job  - p1xpJob;
-    if (totalBase < 0 || totalJob < 0) { toast('⚠ XP do Ponto 2 menor que o do Ponto 1!', 'var(--red)'); return; }
-
-    const diffMin = diffSec / 60;
-    const minBase = totalBase / diffMin, hourBase = minBase * 60;
-    const minJob  = totalJob  / diffMin, hourJob  = minJob  * 60;
-    xpPerMinBase = minBase;
-    xpPerMinJob  = minJob;
-    currentXPBase = xp2Base;
-    currentXPJob  = xp2Job;
-
-    setVal('res-time', fmtTime(diffSec), true);
-    setVal('res-total-base', fmtXP(totalBase), true);
-    setVal('res-min-base',   fmtXP(minBase),   true);
-    setVal('res-hour-base',  fmtXP(hourBase),  true);
-    setVal('res-total-job',  fmtXP(totalJob),  true);
-    setVal('res-min-job',    fmtXP(minJob),    true);
-    setVal('res-hour-job',   fmtXP(hourJob),   true);
-
-    toast('✔ Calculado com sucesso!', 'var(--green)');
   }
 
   /* ============================================================
@@ -898,7 +919,7 @@
     if (to <= from) { toast('⚠ Nível desejado deve ser maior que o atual.', 'var(--red)'); return; }
 
     document.getElementById('base-lv-warning').textContent = '';
-    const needed = sumRange(BASE_EXP_TABLE, from, to);
+    const needed = sumXpForLevels(BASE_EXP_TABLE, from, to);
     document.getElementById('base-lv-range').textContent  = `${from} → ${to}`;
     document.getElementById('base-lv-needed').textContent = fmtXP(needed);
 
@@ -935,7 +956,12 @@
       return;
     }
 
-    const remaining = Math.max(0, needed - currentXP);
+    const prediction = calculatePrediction({
+      totalNeeded: needed,
+      currentXP,
+      ratePerMinute: ratePerMin,
+    });
+    const { remaining } = prediction;
     document.getElementById(`${prefix}-lv-current`).textContent   = fmtXP(currentXP);
     document.getElementById(`${prefix}-lv-remaining`).textContent = fmtXP(remaining);
 
@@ -948,10 +974,10 @@
       warnEl.textContent = warnEl.textContent || '⚠ A XP atual informada é maior que a EXP necessária — confira se o nível atual selecionado bate com o registrado.';
     }
 
-    if (!ratePerMin || ratePerMin <= 0) {
+    if (prediction.minutes === null) {
       etaNetEl.textContent = '?';
     } else {
-      etaNetEl.textContent = remaining === 0 ? '0s' : fmtETA(remaining / ratePerMin);
+      etaNetEl.textContent = remaining === 0 ? '0s' : fmtETA(prediction.minutes);
     }
   }
 
@@ -962,7 +988,7 @@
     if (to <= from) { toast('⚠ Nível desejado deve ser maior que o atual.', 'var(--red)'); return; }
 
     document.getElementById('job-lv-warning').textContent = '';
-    const needed = sumRange(JOB_TABLES[classe], from, to);
+    const needed = sumXpForLevels(JOB_TABLES[classe], from, to);
     document.getElementById('job-lv-range').textContent  = `${from} → ${to}`;
     document.getElementById('job-lv-needed').textContent = fmtXP(needed);
 
@@ -1022,6 +1048,15 @@
       if (v.length > 5) v = v.slice(0,5) + ':' + v.slice(5);
       this.value = v.slice(0, 8);
     });
+  });
+
+  Object.assign(window, {
+    fillNow,
+    registerPoint1,
+    calculate,
+    predictBase,
+    predictJob,
+    resetAll,
   });
 
   initBaseSelects();
