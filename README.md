@@ -1,58 +1,68 @@
 # Calculadora de XP — Ragnarok X
 
-Calculadora web para medir a taxa de ganho de experiência e estimar o tempo necessário para subir níveis de Base e Job em Ragnarok X.
+[![Aplicação](https://img.shields.io/badge/abrir-calculadora-E8B84B?style=for-the-badge)](https://rhoneycruz-ui.github.io/calculadora-xp-ragnarok/)
+[![Tests](https://github.com/rhoneycruz-ui/calculadora-xp-ragnarok/actions/workflows/ci.yml/badge.svg)](https://github.com/rhoneycruz-ui/calculadora-xp-ragnarok/actions/workflows/ci.yml)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES_Modules-4A8DE8?logo=javascript&logoColor=white)](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript)
 
-## Recursos
+Aplicação web para medir a velocidade de ganho de EXP Base e Job e estimar o tempo necessário para alcançar níveis futuros em Ragnarok X.
 
-- registra dois pontos de medição com horário e experiência;
-- calcula experiência total obtida, experiência por minuto e experiência por hora;
-- trata separadamente EXP Base e EXP Job;
-- estima o tempo restante para o próximo nível;
-- permite preencher o horário atual automaticamente;
-- possui layout responsivo para computador e celular;
-- funciona inteiramente no navegador, sem backend e sem instalação.
+[**Usar a calculadora online**](https://rhoneycruz-ui.github.io/calculadora-xp-ragnarok/)
+
+![Prévia da Calculadora de XP](docs/preview.png)
+
+## O que a calculadora faz
+
+- compara dois pontos de medição, inclusive quando o intervalo cruza a meia-noite;
+- calcula EXP obtida, EXP por minuto e EXP por hora;
+- mantém resultados separados para Base e Job;
+- estima a EXP e o tempo restantes entre níveis;
+- funciona em computadores e celulares;
+- processa tudo localmente, sem conta, servidor ou envio dos valores digitados.
 
 ## Como usar
 
-1. Baixe ou clone este repositório.
-2. Abra `Calculadora.html` em um navegador moderno.
-3. Preencha o horário e a experiência Base/Job do primeiro ponto.
-4. Clique em **Registrar ponto 1**.
-5. Depois de algum tempo, informe o segundo ponto.
-6. Clique em **Calcular** para ver a taxa de ganho.
-7. Use **Prever Base** ou **Prever Job** para estimar o tempo restante até o próximo nível.
+1. Informe a hora e a EXP Base/Job iniciais.
+2. Selecione **Registrar ponto 1**.
+3. Jogue por alguns minutos e informe a segunda medição.
+4. Selecione **Calcular taxa**.
+5. Escolha o nível atual e o desejado para calcular a previsão.
 
-Também é possível testar sem clonar o projeto:
+## Desenvolvimento local
 
-1. abra [`Calculadora.html`](Calculadora.html) no GitHub;
-2. use **Download raw file**;
-3. abra o arquivo baixado no navegador.
-
-## Tecnologias
-
-- HTML5
-- CSS3 responsivo
-- JavaScript puro
-- Google Fonts
-
-Todo o HTML, estilo e comportamento estão reunidos em um único arquivo, facilitando o uso local.
-
-## Privacidade
-
-A calculadora não possui servidor, conta de usuário ou banco de dados. Os valores digitados são processados somente na página aberta no navegador. O arquivo carrega fontes pela infraestrutura do Google Fonts quando há conexão com a internet.
-
-## Limitações
-
-- Os cálculos dependem de medições corretas de horário e experiência.
-- Alterações nas tabelas de experiência do jogo podem exigir atualização manual da calculadora.
-- Este é um projeto independente, sem vínculo oficial com Ragnarok X, Nuverse, Gravity ou suas afiliadas.
-
-## Execução local opcional
-
-Embora abrir o HTML diretamente seja suficiente, também é possível servir a pasta localmente:
+O projeto usa apenas HTML, CSS e JavaScript nativo. Para evitar restrições de módulos ES ao abrir arquivos diretamente, sirva a pasta localmente:
 
 ```bash
 python -m http.server 8000
 ```
 
-Depois, acesse `http://localhost:8000/Calculadora.html`.
+Depois, acesse `http://localhost:8000`.
+
+Para executar os testes, use Node.js 24 ou mais recente:
+
+```bash
+npm test
+```
+
+## Estrutura
+
+```text
+.
+├── index.html              # interface e integração com o navegador
+├── src/
+│   ├── calculator.js       # regras de cálculo testáveis
+│   └── experience-data.js  # tabelas de EXP preservadas e verificadas
+├── tests/
+│   └── calculator.test.js  # testes do núcleo
+├── docs/
+│   └── preview.png         # imagem usada neste README
+└── .github/workflows/
+    └── ci.yml              # testes e publicação no GitHub Pages
+```
+
+## Privacidade e limitações
+
+A calculadora não possui backend ou banco de dados. Os valores permanecem na página aberta e são apagados ao recarregar.
+
+As tabelas de EXP estão incorporadas ao projeto e podem precisar de atualização quando o jogo mudar. As estimativas também dependem de medições corretas e de uma taxa de ganho relativamente estável.
+
+Projeto independente, sem vínculo oficial com Ragnarok X, Nuverse, Gravity ou suas afiliadas.
