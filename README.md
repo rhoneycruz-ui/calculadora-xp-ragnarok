@@ -37,7 +37,7 @@ python -m http.server 8000
 
 Depois, acesse `http://localhost:8000`.
 
-Para executar os testes, use Node.js 20 ou mais recente:
+Para executar os testes, use Node.js 24 ou mais recente:
 
 ```bash
 npm test
